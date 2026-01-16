@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Happy Birthday</title>
+
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:Arial,sans-serif}
+body{height:100vh;overflow:hidden}
+
+/* ===== COMMON ===== */
+.screen{
+    position:fixed;
+    inset:0;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    flex-direction:column;
+}
+
+.screen::before{
+    content:"";
+    position:absolute;
+    inset:0;
+    background:rgba(255,255,255,0.35);
+    z-index:0;
+}
+
+.screen>*{position:relative;z-index:1}
+
+/* ===== IMAGE RAIN ===== */
+.rain{
+    position:fixed;
+    top:-60px;
+    width:40px;
+    pointer-events:none;
+    animation:fall linear forwards;
+    z-index:999;
+    opacity:0.85;
+}
+
+@keyframes fall{
+    to{transform:translateY(110vh)}
+}
+
+/* ===== LOCK ===== */
+#lock{background:url("khoa.jpg") center/cover no-repeat}
+.lock-box{
+    background:white;
+    padding:25px;
+    border-radius:20px;
+    text-align:center;
+    box-shadow:0 10px 30px rgba(0,0,0,.25);
+}
+.cat{font-size:80px}
+
+/* ===== CALENDAR ===== */
+#calendar-screen{display:none;background:url("lich.jpg") center/cover no-repeat}
+.calendar-book{
+    background:white;
+    width:340px;
+    border-radius:15px;
+    padding:20px;
+    box-shadow:0 15px 40px rgba(0,0,0,.25);
+}
+.grid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
+.cell{height:36px;display:flex;justify-content:center;align-items:center}
+.header{font-weight:bold}
+.day{position:relative}
+#circle{
+    width:28px;height:28px;
+    border:4px solid red;
+    border-radius:50%;
+    position:absolute;
+    transition:all 1s linear;
+}
+
+/* ===== BIRTHDAY ===== */
+#birthday{
+    display:none;
+    background:linear-gradient(135deg,#ff80ab,#ff4081);
+    color:white;
+    font-size:48px;
+    font-weight:bold;
+}
+
+/* ===== LETTER ===== */
+#letter{display:none;background:url("cuoi.jpg") center/cover no-repeat}
+.envelope{
+    width:360px;height:240px;
+    background:#f28b82;
+    border-radius:12px;
+    position:relative;
+    cursor:pointer;
+}
+.envelope::before{
+    content:"";
+    position:absolute;
+    top:0;left:0;
+    border-left:180px solid transparent;
+    border-right:180px solid transparent;
+    border-top:130px solid #e57373;
+}
+.click-text{
+    position:absolute;
+    bottom:20px;left:50%;
+    transform:translateX(-50%);
+    color:white;font-weight:bold;
+    letter-spacing:3px;
+    animation:blink 1.2s infinite;
+}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
+
+.paper{
+    display:none;
+    background:white;
+    width:380px;
+    padding:30px;
+    border-radius:12px;
+}
+.line{min-height:26px;margin:10px 0;font-size:18px}
+</style>
+</head>
+
+<body>
+
+<audio id="bgm" src="snaptt.me-41255949.mp3" loop></audio>
+
+<!-- LOCK -->
+<div id="lock" class="screen">
+    <div class="lock-box">
+        <div class="cat">🐱</div>
+        <h3>ENTER PASSWORD</h3>
+        <input type="password" id="pw"><br><br>
+        <button onclick="unlock()">OK</button>
+    </div>
+</div>
+
+<!-- CALENDAR -->
+<div id="calendar-screen" class="screen">
+    <div class="calendar-book">
+        <h3 style="text-align:center">January 2026</h3>
+        <div class="grid" id="grid"></div>
+    </div>
+    <div id="circle"></div>
+</div>
+
+<!-- BIRTHDAY -->
+<div id="birthday" class="screen">🎉 HAPPY BIRTHDAY 🎉</div>
+
+<!-- LETTER -->
+<div id="letter" class="screen">
+    <div class="envelope" onclick="openLetter()">
+        <div class="click-text">CLICK</div>
+    </div>
+    <div class="paper" id="paper">
+        <div class="line" id="l1"></div>
+        <div class="line" id="l2"></div>
+        <div class="line" id="l3"></div>
+        <div class="line" id="l4"></div>
+        <div class="line" id="l5"></div>
+        <div class="line" id="l6"></div>
+
+    </div>
+</div>
+
+<script>
+/* ===== FIX DOM ===== */
+const lock = document.getElementById("lock");
+const calendarScreen = document.getElementById("calendar-screen");
+const birthday = document.getElementById("birthday");
+const letter = document.getElementById("letter");
+const paper = document.getElementById("paper");
+const bgm = document.getElementById("bgm");
+const pw = document.getElementById("pw");
+
+const PASSWORD="01012026";
+const BIRTHDAY_DAY=20;
+
+/* ===== RAIN IMAGE ===== */
+function rainImage(){
+    const img=document.createElement("img");
+    img.src="huong.jpg";
+    img.className="rain";
+    img.style.left=Math.random()*100+"vw";
+    img.style.animationDuration=(4+Math.random()*3)+"s";
+    document.body.appendChild(img);
+    setTimeout(()=>img.remove(),8000);
+}
+
+/* ===== UNLOCK ===== */
+function unlock(){
+    if(pw.value!==PASSWORD){
+        alert("Sai mật khẩu");
+        return;
+    }
+    bgm.play();
+    setInterval(rainImage,300);
+    lock.style.display="none";
+    calendarScreen.style.display="flex";
+    buildCalendar();
+    animateCircle();
+}
+
+/* ===== CALENDAR ===== */
+function buildCalendar(){
+    const grid=document.getElementById("grid");
+    grid.innerHTML="";
+    ["S","M","T","W","T","F","S"].forEach(d=>{
+        let c=document.createElement("div");
+        c.className="cell header";
+        c.innerText=d;
+        grid.appendChild(c);
+    });
+    for(let i=0;i<4;i++)grid.appendChild(document.createElement("div"));
+    for(let i=1;i<=31;i++){
+        let c=document.createElement("div");
+        c.className="cell day";
+        c.innerText=i;
+        c.dataset.day=i;
+        grid.appendChild(c);
+    }
+}
+
+function animateCircle(){
+    const days=document.querySelectorAll(".day");
+    const circle=document.getElementById("circle");
+    let step=0;
+    const timer=setInterval(()=>{
+        move(days[Math.floor(Math.random()*days.length)]);
+        if(++step>12){
+            clearInterval(timer);
+            move(document.querySelector(`[data-day="${BIRTHDAY_DAY}"]`));
+            setTimeout(()=>{
+                calendarScreen.style.display="none";
+                birthday.style.display="flex";
+            },1200);
+            setTimeout(()=>{
+                birthday.style.display="none";
+                letter.style.display="flex";
+            },4200);
+        }
+    },900);
+
+    function move(el){
+        const r=el.getBoundingClientRect();
+        circle.style.left=r.left+r.width/2-14+"px";
+        circle.style.top=r.top+r.height/2-14+"px";
+    }
+}
+
+/* ===== LETTER TEXT ===== */
+const text=[
+ "Chúc bạn sinh nhật thật vui vẻ 💙",
+ "Luôn mỉm cười và hạnh phúc ✨",
+ "Chúc bạn luôn chăm ngoan , học giỏi và luôn xinh đẹp như furina :3🌸",
+ "Chúc bạn có 1 sinh nhật đáng nhớ 💖",
+ "Nhớ mở quà của tui ra nhé 🎁",
+ "Mong bạn thích nhưng món quà đó💖",
+
+];
+
+function openLetter(){
+    document.querySelector(".envelope").style.display="none";
+    paper.style.display="block";
+    typeText(0);
+}
+
+function typeText(i){
+    if(i>=text.length)return;
+    let el=document.getElementById("l"+(i+1)),j=0;
+    const t=setInterval(()=>{
+        el.textContent+=text[i][j++];
+        if(j===text[i].length){
+            clearInterval(t);
+            setTimeout(()=>typeText(i+1),500);
+        }
+    },50);
+}
+</script>
+
+</body>
+</html>
